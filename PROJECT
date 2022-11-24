@@ -14,4 +14,13 @@ resources:
   kind: DataSource
   path: github.com/yuanyp8/dbhero/apis/datasource/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dbhero.io
+  group: database
+  kind: Database
+  path: github.com/yuanyp8/dbhero/apis/database/v1alpha1
+  version: v1alpha1
 version: "3"

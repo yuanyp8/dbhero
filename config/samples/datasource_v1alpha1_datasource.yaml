@@ -9,4 +9,18 @@ metadata:
     app.kubernetes.io/created-by: dbhero
   name: datasource-sample
 spec:
-  # TODO(user): Add fields here
+  connection:
+    mysql:
+      access:
+        host: mysql.default.svc.cluster.local
+        port: 3306
+        privateAddr: mysql.dbaas.onecode.cmict.cloud:32335
+        publicAddr: mysql.dbaas.onecode.cmict.cloud:32335
+      auth:
+        password:
+          value: password
+        username:
+          valueFrom:
+            secretKeyRef:
+              key: name
+              name: key

@@ -31,7 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	databasev1alpha1 "github.com/yuanyp8/dbhero/apis/database/v1alpha1"
 	datasourcev1alpha1 "github.com/yuanyp8/dbhero/apis/datasource/v1alpha1"
+	databasecontrollers "github.com/yuanyp8/dbhero/controllers/database"
 	datasourcecontrollers "github.com/yuanyp8/dbhero/controllers/datasource"
 	//+kubebuilder:scaffold:imports
 )
@@ -45,6 +47,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(datasourcev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(databasev1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -94,6 +97,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DataSource")
+		os.Exit(1)
+	}
+	if err = (&databasecontrollers.DatabaseReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Database")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

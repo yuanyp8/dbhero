@@ -38,6 +38,32 @@ rules:
   - update
   - watch
 - apiGroups:
+  - database.dbhero.io
+  resources:
+  - databases
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - database.dbhero.io
+  resources:
+  - databases/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - database.dbhero.io
+  resources:
+  - databases/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - datasource.dbhero.io
   resources:
   - datasources
