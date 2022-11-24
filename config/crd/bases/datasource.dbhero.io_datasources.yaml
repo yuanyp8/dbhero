@@ -1,0 +1,225 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: datasources.datasource.dbhero.io
+spec:
+  group: datasource.dbhero.io
+  names:
+    kind: DataSource
+    listKind: DataSourceList
+    plural: datasources
+    singular: datasource
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.namespace
+      name: Namespace
+      priority: 1
+      type: string
+    - jsonPath: .status.type
+      name: TYPE
+      type: string
+    - jsonPath: .status.isConnected
+      name: CONNECTED
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DataSource is the Schema for the datasource API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DataSourceSpec defines the desired state of DataSource
+            properties:
+              connection:
+                properties:
+                  mysql:
+                    properties:
+                      access:
+                        description: AccessAddress defines 3 available connection
+                          address. 1) Host:Port is used to connect the backend database
+                          from this kubernetes cluster. 2) PrivateAddr is the inner
+                          network address, such as a `Service Name`. 3) PublicAddr
+                          is the outside network address, such as a Public IP addr.
+                        properties:
+                          host:
+                            description: Host is the backend database access address
+                              for dbaas operator, e.g. 127.0.0.1
+                            type: string
+                          port:
+                            default: 3306
+                            description: Port is the backend database access port
+                              for dbaas operator, e.g. 3306
+                            type: integer
+                          privateAddr:
+                            description: PrivateAddr is the inner network access address
+                            type: string
+                          publicAddr:
+                            description: PublicAddr is the outside network access
+                              address
+                            type: string
+                        required:
+                        - host
+                        type: object
+                      auth:
+                        description: Auth defines the necessary conditions for connecting
+                          to the database
+                        properties:
+                          password:
+                            description: Password is the database access password
+                            properties:
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                    - key
+                                    - name
+                                    type: object
+                                type: object
+                            type: object
+                          username:
+                            description: Username is to access the database
+                            properties:
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                    - key
+                                    - name
+                                    type: object
+                                type: object
+                            type: object
+                        required:
+                        - password
+                        type: object
+                      pool_config:
+                        default:
+                          max_idle_conn: 50
+                          max_idle_time: 600
+                          max_life_time: 1800
+                          max_open_conn: 200
+                        description: ConnectPoolConfig is used to maintain information
+                          about connection pool status.
+                        properties:
+                          max_idle_conn:
+                            default: 50
+                            type: integer
+                          max_idle_time:
+                            default: 600
+                            type: integer
+                          max_life_time:
+                            default: 1800
+                            type: integer
+                          max_open_conn:
+                            default: 200
+                            type: integer
+                        type: object
+                      version:
+                        default: "5.7"
+                        description: Version is the mysql protocol version
+                        type: string
+                    required:
+                    - access
+                    - auth
+                    type: object
+                  postgre:
+                    description: 'TODO(yuanyp8): not implement'
+                    type: object
+                type: object
+            type: object
+          status:
+            description: DataSourceStatus defines the observed state of DataSource
+            properties:
+              auth:
+                description: Auth defines the necessary conditions for connecting
+                  to the database
+                properties:
+                  password:
+                    description: Password is the database access password
+                    properties:
+                      value:
+                        type: string
+                      valueFrom:
+                        properties:
+                          secretKeyRef:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        type: object
+                    type: object
+                  username:
+                    description: Username is to access the database
+                    properties:
+                      value:
+                        type: string
+                      valueFrom:
+                        properties:
+                          secretKeyRef:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        type: object
+                    type: object
+                required:
+                - password
+                type: object
+              isConnected:
+                default: false
+                type: boolean
+              lastPing:
+                type: string
+              type:
+                default: UnKnown
+                type: string
+            required:
+            - lastPing
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

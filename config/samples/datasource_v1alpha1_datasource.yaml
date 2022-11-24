@@ -1,0 +1,12 @@
+apiVersion: datasource.dbhero.io/v1alpha1
+kind: DataSource
+metadata:
+  labels:
+    app.kubernetes.io/name: datasource
+    app.kubernetes.io/instance: datasource-sample
+    app.kubernetes.io/part-of: dbhero
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: dbhero
+  name: datasource-sample
+spec:
+  # TODO(user): Add fields here

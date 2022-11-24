@@ -1,0 +1,17 @@
+domain: dbhero.io
+layout:
+- go.kubebuilder.io/v3
+multigroup: true
+projectName: dbhero
+repo: github.com/yuanyp8/dbhero
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dbhero.io
+  group: datasource
+  kind: DataSource
+  path: github.com/yuanyp8/dbhero/apis/datasource/v1alpha1
+  version: v1alpha1
+version: "3"
