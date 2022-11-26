@@ -20,22 +20,39 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // DatabaseSpec defines the desired state of Database
 type DatabaseSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Database. Edit database_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	//kubebuilder:default=utf8mb4
+	//+kubebuilder:validation:Enum={utf8mb4,latin1}
+	DefaultCharacterSet CharacterSet `json:"defaultCharacterSet,omitempty"`
+
+	//kubebuilder:default=utf8mb4_general_ci
+	//+kubebuilder:validation:Enum={utf8mb4_general_ci,latin1_general_cs}
+	DefaultCollation Collation `json:"defaultCollation,omitempty"`
+
+	//+optional
+	//+kubebuilder:default=mysql
+	//+kubebuilder:validation:Enum={mysql,postgresql}
+	DBType string `json:"DBType,omitempty"`
+
+	//+kubebuilder:default=5.7
+	//+kubebuilder:validation:Enum={5.7,8.0}
+	DBVersion string `json:"DBVersion,omitempty"`
+
+	//+optional
+	//+kubebuilder:validation:MinLength:=6
+	//+kubebuilder:validation:MaxLength:=16
+	DBName string `json:"dbName,omitempty"`
+
+	Auth Auth `json:"auth,omitempty"`
 }
 
 // DatabaseStatus defines the observed state of Database
 type DatabaseStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	DBName string        `json:"dbName,omitempty"`
+	Auth   Auth          `json:"auth,omitempty"`
+	Access AccessAddress `json:"access,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -57,6 +74,28 @@ type DatabaseList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Database `json:"items"`
+}
+
+func (in *Database) SetAnnotation() *Database {
+	if in.GetAnnotations() == nil {
+		in.Annotations = map[string]string{}
+	}
+	return in
+}
+
+func (in *Database) SetLabels(labels map[string]string) {
+	if in.ObjectMeta.Labels == nil {
+		in.ObjectMeta.Labels = map[string]string{
+			"control-plane": "dbhero",
+		}
+	}
+
+	if len(labels) != 0 {
+		for k, v := range labels {
+			in.ObjectMeta.Labels[k] = v
+		}
+	}
+	return
 }
 
 func init() {

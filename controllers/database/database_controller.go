@@ -18,6 +18,10 @@ package database
 
 import (
 	"context"
+	"fmt"
+	"github.com/yuanyp8/dbhero/controllers/datasource"
+	"github.com/yuanyp8/dbhero/internal/random"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -36,20 +40,56 @@ type DatabaseReconciler struct {
 //+kubebuilder:rbac:groups=database.dbhero.io,resources=databases,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=database.dbhero.io,resources=databases/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=database.dbhero.io,resources=databases/finalizers,verbs=update
+//+kubebuilder:rbac:groups=datasource.dbhero.io,resources=datasources,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=datasource.dbhero.io,resources=datasources/status,verbs=get;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Database object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *DatabaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	l := log.FromContext(ctx).WithName("reconciling database")
 
-	// TODO(user): your logic here
+	databaseInstance := &databasev1alpha1.Database{}
+
+	// 1. get database instance
+	err := r.Get(ctx, req.NamespacedName, databaseInstance)
+	if errors.IsNotFound(err) {
+		l.Error(err, "database instance not found", "name", req.Name)
+		return ctrl.Result{}, err
+	}
+	if err != nil {
+		l.Error(err, "unable to get database instance", "namespace", req.NamespacedName, "name", req.Name)
+		return ctrl.Result{}, err
+	}
+
+	// 2. get *sql.DB
+	dbVersion, dbType := databaseInstance.Spec.DBVersion, databaseInstance.Spec.DBVersion
+
+	db := datasource.GetDB(dbType, dbVersion)
+	if db == nil {
+		l.Error(fmt.Errorf("there is no vaild datasouce"), "", "DbVersion", dbVersion, "DbType", dbType)
+		return ctrl.Result{}, fmt.Errorf("there is no vaild datasouce")
+	}
+
+	// 3. set annotations
+	databaseInstance.SetAnnotation()
+
+	// 4. add labels
+	databaseInstance.SetLabels(map[string]string{"dbType": string(databaseInstance.Spec.DBType), "database": req.Name})
+	l.Info("set label succeed")
+
+	// 5. determine database's datasource type
+	switch dbType {
+
+	case "postgresql":
+		l.Error(fmt.Errorf("this db type is not implement"), "type", databaseInstance.Spec.DBType)
+		return ctrl.Result{}, fmt.Errorf("this db type is not implement")
+
+	case "mysql":
+
+	default:
+		l.Error(nil, "not implement database type", "type", dbType)
+		return ctrl.Result{}, fmt.Errorf("not implement database type")
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -59,4 +99,21 @@ func (r *DatabaseReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databasev1alpha1.Database{}).
 		Complete(r)
+}
+
+//+kubebuilder:rbac:groups:core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
+
+func (r *DatabaseReconciler) getUsername(ctx context.Context, ins *databasev1alpha1.Database) (string, error) {
+	l := log.FromContext(ctx).WithName("getUsername")
+
+	// determine if the auth is empty
+	if ins.Spec.Auth.Username.IsEmpty() {
+		// generate username
+
+		for {
+			username := random.UsernameGenerator(8)
+			// if username exist in the datasource
+
+		}
+	}
 }

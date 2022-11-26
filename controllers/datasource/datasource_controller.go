@@ -39,10 +39,25 @@ type DataSourceReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+type DB struct {
+	DBType    string  `json:"DBType,omitempty"`
+	DBVersion string  `json:"DBVersion,omitempty"`
+	DB        *sql.DB `json:"DB,omitempty"`
+}
+
 var (
-	DbMap = make(map[string]*sql.DB)
+	DbMap = make(map[string]*DB, 10)
 	mux   = sync.Mutex{}
 )
+
+func GetDB(dbType, dbVersion string) *sql.DB {
+	for _, db := range DbMap {
+		if db.DBVersion == dbVersion && db.DBType == dbType {
+			return db.DB
+		}
+	}
+	return nil
+}
 
 //+kubebuilder:rbac:groups=datasource.dbhero.io,resources=datasources,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=datasource.dbhero.io,resources=datasources/status,verbs=get;update;patch
@@ -110,7 +125,7 @@ func (r *DataSourceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		datasourceInstance.Status.LastPing = string(time.Now().String())
 	}
 
-	// dbaas current does not support any database-wide schema properties in Postgre
+	// dbhero current does not support any database-wide schema properties in Postgresql
 	if datasourceInstance.Spec.Connection.Postgre != nil {
 		l.Info("ignoring postgres database schema reconcile request")
 		return ctrl.Result{}, fmt.Errorf("ignoring postgres database schema reconcile request")
@@ -127,7 +142,10 @@ func (r *DataSourceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{Requeue: true}, err
 	}*/
 
-	// 6. update
+	// 6. set status.Version
+	datasourceInstance.Status.Version = datasourceInstance.Spec.Connection.MySQL.Version
+
+	// 7. update
 	if err := r.Status().Update(ctx, datasourceInstance); err != nil {
 		l.Error(err, "modify the  status failed")
 		return ctrl.Result{Requeue: true}, err
@@ -199,9 +217,9 @@ func (r *DataSourceReconciler) setUserNameAndPassword(ctx context.Context, ins *
 func (r *DataSourceReconciler) getDB(ins *datasourcev1alpha1.DataSource) (*sql.DB, error) {
 	if _, exist := DbMap[ins.Name]; exist {
 		// 有了也需要重新刷新下
-		if err := mysql.Ping(context.TODO(), DbMap[ins.Name]); err == nil {
+		if err := mysql.Ping(context.TODO(), DbMap[ins.Name].DB); err == nil {
 			ins.Status.IsConnected = true
-			return DbMap[ins.Name], nil
+			return DbMap[ins.Name].DB, nil
 		}
 	}
 	mux.Lock()
@@ -213,7 +231,13 @@ func (r *DataSourceReconciler) getDB(ins *datasourcev1alpha1.DataSource) (*sql.D
 		return nil, err
 	}
 	ins.Status.IsConnected = true
-	DbMap[ins.Name] = db
+
+	DbMap[ins.Name] = &DB{
+		DBType:    string(ins.Status.Type),
+		DBVersion: ins.Status.Version,
+		DB:        db,
+	}
+
 	return db, nil
 }
 

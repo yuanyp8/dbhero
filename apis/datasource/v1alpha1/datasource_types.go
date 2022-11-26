@@ -47,14 +47,16 @@ type DataSourceStatus struct {
 	//+kubebuilder:default="UnKnown"
 	//+optional
 
-	Type DataSourceType `json:"type"`
-	Auth Auth           `json:"auth,omitempty"`
+	Type    DataSourceType `json:"type"`
+	Auth    Auth           `json:"auth,omitempty"`
+	Version string         `json:"version,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Namespace",type=string,JSONPath=`.metadata.namespace`,priority=1
 //+kubebuilder:printcolumn:name="TYPE",type="string",JSONPath=".status.type"
+//+kubebuilder:printcolumn:name="Version",type="string",JSONPath=".status.version"
 //+kubebuilder:printcolumn:name="CONNECTED",type="boolean",JSONPath=".status.isConnected"
 //+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
