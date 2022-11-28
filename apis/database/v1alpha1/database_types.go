@@ -23,10 +23,12 @@ import (
 // DatabaseSpec defines the desired state of Database
 type DatabaseSpec struct {
 
+	//+optional
 	//kubebuilder:default=utf8mb4
 	//+kubebuilder:validation:Enum={utf8mb4,latin1}
 	DefaultCharacterSet CharacterSet `json:"defaultCharacterSet,omitempty"`
 
+	//+optional
 	//kubebuilder:default=utf8mb4_general_ci
 	//+kubebuilder:validation:Enum={utf8mb4_general_ci,latin1_general_cs}
 	DefaultCollation Collation `json:"defaultCollation,omitempty"`

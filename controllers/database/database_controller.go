@@ -61,8 +61,22 @@ func (r *DatabaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	// 2. get *sql.DB
+	// 2. determine the dbType and dbVersion to detect the *sql.DB
+
 	dbVersion, dbType := databaseInstance.Spec.DBVersion, databaseInstance.Spec.DBVersion
+
+	switch dbType {
+
+	case "postgresql":
+		l.Error(fmt.Errorf("this db type is not implement"), "type", databaseInstance.Spec.DBType)
+		return ctrl.Result{}, fmt.Errorf("this db type is not implement")
+
+	case "mysql":
+
+	default:
+		l.Error(nil, "not implement database type", "type", dbType)
+		return ctrl.Result{}, fmt.Errorf("not implement database type")
+	}
 
 	db := datasource.GetDB(dbType, dbVersion)
 	if db == nil {
@@ -77,19 +91,7 @@ func (r *DatabaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	databaseInstance.SetLabels(map[string]string{"dbType": string(databaseInstance.Spec.DBType), "database": req.Name})
 	l.Info("set label succeed")
 
-	// 5. determine database's datasource type
-	switch dbType {
-
-	case "postgresql":
-		l.Error(fmt.Errorf("this db type is not implement"), "type", databaseInstance.Spec.DBType)
-		return ctrl.Result{}, fmt.Errorf("this db type is not implement")
-
-	case "mysql":
-
-	default:
-		l.Error(nil, "not implement database type", "type", dbType)
-		return ctrl.Result{}, fmt.Errorf("not implement database type")
-	}
+	// 5. determine username and password
 
 	return ctrl.Result{}, nil
 }
@@ -109,7 +111,7 @@ func (r *DatabaseReconciler) getUsername(ctx context.Context, ins *databasev1alp
 	// determine if the auth is empty
 	if ins.Spec.Auth.Username.IsEmpty() {
 		// generate username
-
+		
 		for {
 			username := random.UsernameGenerator(8)
 			// if username exist in the datasource
