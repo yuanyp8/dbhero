@@ -70,4 +70,5 @@ pipeline {
         DEPLOY_APP = 'dbhero-controller'
         DEPLOY_ENV = 'main'
     }
+  }
 }
