@@ -42,9 +42,9 @@ type DatabaseSpec struct {
 	//+kubebuilder:validation:Enum={5.7,8.0}
 	DBVersion string `json:"DBVersion,omitempty"`
 
-	//+optional
 	//+kubebuilder:validation:MinLength:=6
 	//+kubebuilder:validation:MaxLength:=16
+	//+kubebuilder:validation:Required
 	DBName string `json:"dbName,omitempty"`
 
 	Auth Auth `json:"auth,omitempty"`

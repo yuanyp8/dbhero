@@ -35,13 +35,141 @@ spec:
           spec:
             description: DatabaseSpec defines the desired state of Database
             properties:
-              foo:
-                description: Foo is an example field of Database. Edit database_types.go
-                  to remove/update
+              DBType:
+                default: mysql
+                enum:
+                - mysql
+                - postgresql
+                type: string
+              DBVersion:
+                default: 5.7
+                enum:
+                - 5.7
+                - 8
+                type: string
+              auth:
+                description: Auth defines the necessary conditions for connecting
+                  to the database
+                properties:
+                  password:
+                    description: Password is the database access password
+                    properties:
+                      value:
+                        type: string
+                      valueFrom:
+                        properties:
+                          secretKeyRef:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        type: object
+                    type: object
+                  username:
+                    description: Username is to access the database
+                    properties:
+                      value:
+                        type: string
+                      valueFrom:
+                        properties:
+                          secretKeyRef:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        type: object
+                    type: object
+                required:
+                - password
+                type: object
+              dbName:
+                maxLength: 16
+                minLength: 6
+                type: string
+              defaultCharacterSet:
+                enum:
+                - utf8mb4
+                - latin1
+                type: string
+              defaultCollation:
+                enum:
+                - utf8mb4_general_ci
+                - latin1_general_cs
                 type: string
             type: object
           status:
             description: DatabaseStatus defines the observed state of Database
+            properties:
+              access:
+                description: AccessAddress defines 3 available connection address.
+                  1) PrivateAddr is the inner network address, such as a `Service
+                  Name`. 2) PublicAddr is the outside network address, such as a Public
+                  IP addr.
+                properties:
+                  privateAddr:
+                    description: PrivateAddr is the inner network access address
+                    type: string
+                  publicAddr:
+                    description: PublicAddr is the outside network access address
+                    type: string
+                type: object
+              auth:
+                description: Auth defines the necessary conditions for connecting
+                  to the database
+                properties:
+                  password:
+                    description: Password is the database access password
+                    properties:
+                      value:
+                        type: string
+                      valueFrom:
+                        properties:
+                          secretKeyRef:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        type: object
+                    type: object
+                  username:
+                    description: Username is to access the database
+                    properties:
+                      value:
+                        type: string
+                      valueFrom:
+                        properties:
+                          secretKeyRef:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            required:
+                            - key
+                            - name
+                            type: object
+                        type: object
+                    type: object
+                required:
+                - password
+                type: object
+              dbName:
+                type: string
             type: object
         type: object
     served: true

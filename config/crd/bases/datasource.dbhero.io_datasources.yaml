@@ -23,6 +23,9 @@ spec:
     - jsonPath: .status.type
       name: TYPE
       type: string
+    - jsonPath: .status.version
+      name: Version
+      type: string
     - jsonPath: .status.isConnected
       name: CONNECTED
       type: boolean
@@ -214,6 +217,8 @@ spec:
                 type: string
               type:
                 default: UnKnown
+                type: string
+              version:
                 type: string
             required:
             - lastPing
