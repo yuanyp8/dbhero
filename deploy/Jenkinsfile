@@ -32,21 +32,6 @@ pipeline {
       }
     }
 
-    stage('Compile source code') {
-      agent {
-          label 'db'
-      }
-      steps {
-          sh 'cat Dockerfile'
-          withCredentials([usernamePassword(credentialsId : env.HARBOR_CREDENTIAL_ID ,passwordVariable : 'HARBOR_PASSWORD' ,usernameVariable : 'HARBOR_USERNAME' ,)]) {
-            sh 'echo $HARBOR_USERNAME'
-            sh 'echo "$HARBOR_PASSWORD" | docker login -u "$HARBOR_USERNAME" --password-stdin $REGISTRY'
-            sh 'docker build --network host -t $REGISTRY/$PROJECT/$DEPLOY_APP:$DEPLOY_ENV-$BUILD_NUMBER .'
-            sh 'docker push $REGISTRY/$PROJECT/$DEPLOY_APP:$DEPLOY_ENV-$BUILD_NUMBER'
-          }
-      }
-    }
-
     stage('deploy') {
       agent {
           label 'db'
@@ -54,10 +39,15 @@ pipeline {
       steps {
             sh 'make manifests'
             sh 'make install'
+            sh 'cat Dockerfile'
+                      withCredentials([usernamePassword(credentialsId : env.HARBOR_CREDENTIAL_ID ,passwordVariable : 'HARBOR_PASSWORD' ,usernameVariable : 'HARBOR_USERNAME' ,)]) {
+                        sh 'echo $HARBOR_USERNAME'
+                        sh 'echo "$HARBOR_PASSWORD" | docker login -u "$HARBOR_USERNAME" --password-stdin $REGISTRY'
             sh 'IMG=$REGISTRY/$PROJECT/$DEPLOY_APP:$DEPLOY_ENV-$BUILD_NUMBER make docker-build'
             sh 'IMG=$REGISTRY/$PROJECT/$DEPLOY_APP:$DEPLOY_ENV-$BUILD_NUMBER make docker-push'
             sh 'make deploy'
         }
+      }
     }
 
     environment {
@@ -70,5 +60,6 @@ pipeline {
         DEPLOY_APP = 'dbhero-controller'
         DEPLOY_ENV = 'main'
     }
+
   }
 }
